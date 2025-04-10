@@ -115,7 +115,7 @@ class AIPlayer(Player):
         
         possible_moves = board.get_possible_moves()
         if not possible_moves:
-            return 0  # Empate
+            return 0
         
         # Ordenar movimientos por heurística
         current_player = self.player_id if maximizing else self.opponent_id
@@ -250,7 +250,7 @@ class AIPlayer(Player):
             if (row, col) in targets:
                 return dist
             
-            for r, c in board.get_adjacent_hexes(row, col):
+            for r, c in self.get_adjacent_hexes(row, col):
                 if 0 <= r < size and 0 <= c < size and not visited[r][c]:
                     if (r, c) == exclude:
                         continue
@@ -259,6 +259,24 @@ class AIPlayer(Player):
                         queue.append((r, c, dist + 1))
         
         return None
+    
+    def get_adjacent_hexes(self, row: int, col: int) -> list:
+        """Devuelve las casillas adyacentes según even-r"""
+        if row % 2 == 0:  # Fila par
+            directions = [
+                (0, -1), (0, 1),    # Izquierda, derecha
+                (-1, 0), (1, 0),    # Arriba, abajo
+                (-1, 1), (1, 1)     # Arriba-derecha, abajo-derecha
+            ]
+        else:  # Fila impar
+            directions = [
+                (0, -1), (0, 1),    # Izquierda, derecha
+                (-1, 0), (1, 0),    # Arriba, abajo
+                (-1, -1), (1, -1)   # Arriba-izquierda, abajo-izquierda
+            ]
+        
+        return [(row + dr, col + dc) for dr, dc in directions 
+                if 0 <= row + dr < self.size and 0 <= col + dc < self.size]
 
     def _count_bridges(self, board, player_id):
         """Cuenta puentes potenciales (dos conexiones separadas por una celda vacía)"""
@@ -269,7 +287,7 @@ class AIPlayer(Player):
             for j in range(size):
                 if board.board[i][j] == 0:  # Celda vacía
                     # Verificar si conecta dos piezas del jugador
-                    neighbors = board.get_adjacent_hexes(i, j)
+                    neighbors = self.get_adjacent_hexes(i, j)
                     player_neighbors = 0
                     
                     for r, c in neighbors:
@@ -294,7 +312,7 @@ class AIPlayer(Player):
                     control += (size - distance_to_center)
                     
                     # Bonus por conexiones adyacentes
-                    neighbors = board.get_adjacent_hexes(i, j)
+                    neighbors = self.get_adjacent_hexes(i, j)
                     for r, c in neighbors:
                         if 0 <= r < size and 0 <= c < size and board.board[r][c] == player_id:
                             control += 0.5
